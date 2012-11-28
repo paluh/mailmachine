@@ -14,8 +14,8 @@ import yaml
 
 def collect_errors(form):
     errors = []
+    join_path = lambda *args: '.'.join(filter(None, args))
     def _collect_errors(f, p=''):
-        join_path = lambda *args: '.'.join(filter(None, args))
         if f.errors:
             errors.append((join_path(p,f.name), f.errors))
         for c in f.children:
@@ -72,15 +72,15 @@ def send(mail, connection, logger=None):
 class ConfigForm(Form):
 
     hostname = String
-    redis = Dict.of(String.named('host').using(validators=[Present()]),
+    redis = Dict.of(RequiredString.named('host'),
                     Integer.named('port').using(validators=[Present()]),
                     String.named('password').using(optional=True),
-                    String.named('mail_queue').using(validators=[Present()]))
-    mailing = Dict.of(String.named('host').using(validators=[Present()]),
+                    RequiredString.named('mail_queue'))
+    mailing = Dict.of(RequiredString.named('host'),
                       Integer.named('port').using(validators=[Present()]),
-                      String.named('username').using(validators=[Present()]),
-                      String.named('password').using(validators=[Present()]),
-                      String.named('use_tls').using(validators=[Present()]))
+                      RequiredString.named('username'),
+                      RequiredString.named('password'),
+                      RequiredString.named('use_tls'))
     logging = Dict.of(Enum.named('level').valued('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'),
                       Boolean.named('console'),
                       Boolean.named('syslog'),
