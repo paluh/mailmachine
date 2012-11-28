@@ -1,0 +1,6 @@
+hotqueue
+flatland
+-e git+git://github.com/paluh/email-message.git#egg=email_message
+pyyaml
+pygments
+simplejson

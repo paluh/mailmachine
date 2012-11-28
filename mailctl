@@ -1,0 +1,53 @@
+import argparse
+import hotqueue
+import os
+import pprint
+from pygments import highlight
+from pygments.formatters import TerminalFormatter
+from pygments.lexers import JSONLexer
+import simplejson
+
+import machine
+
+def _print(result, colors):
+    json = simplejson.dumps(result, sort_keys=True, indent=4)
+    if colors:
+        print highlight(json, JSONLexer(), TerminalFormatter())
+    else:
+        pprint.pprint(json)
+
+def do_mail(args, mail_queue):
+    mail = simplejson.loads(args.mail_data)
+    mail_queue.put(mail)
+
+def do_list(args, mail_queue):
+    mails = []
+    for mail in [mail_queue.serializer.loads(c) for c in mail_queue._HotQueue__redis.lrange(mail_queue.key, 0, len(mail_queue)-1)]:
+        mail_queue._HotQueue__redis
+        mails.append(mail)
+    _print(mails, not args.no_colors)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Put mail to mailing queue')
+    default_config = '/etc/mail-machine.yaml'
+    parser.add_argument('-c', '--config', help='Specify configuration file',
+                        default=default_config if os.path.exists(default_config) else None)
+    subparsers = parser.add_subparsers(help='Subcommands help')
+
+    mail_parser = subparsers.add_parser('mail')
+    mail_parser.add_argument('mail_data')
+    mail_parser.set_defaults(func=do_mail)
+
+    list_parser = subparsers.add_parser('list')
+    list_parser.add_argument('--no-colors', help='Print result in colors',
+                             default=False, action='store_true')
+    list_parser.set_defaults(func=do_list)
+
+    args = parser.parse_args()
+    config = machine.load_config(args.config)
+    c = config['redis']
+    mail_queue = hotqueue.HotQueue(c['mail_queue'], host=c['host'], port=c['port'],
+                                   password=c.get('password'))
+
+    args.func(args, mail_queue)
