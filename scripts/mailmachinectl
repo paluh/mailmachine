@@ -31,7 +31,7 @@ def do_list(args, mail_queue):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Put mail to mailing queue')
-    default_config = '/etc/mail-machine.yaml'
+    default_config = '/etc/mailmachine.yaml'
     parser.add_argument('-c', '--config', help='Specify configuration file',
                         default=default_config if os.path.exists(default_config) else None)
     subparsers = parser.add_subparsers(help='Subcommands help')
