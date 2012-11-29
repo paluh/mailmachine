@@ -20,7 +20,7 @@ def send(mail, connection, logger=None):
     if form.validate():
         message_data = form.value
         for recipient in message_data.pop('recipients'):
-            alternatives = [{'content': a['content'], 'mime': a['mime']} for a in message_data.pop('alternatives')]
+            alternatives = [(a['content'], a['mime']) for a in message_data.pop('alternatives')]
             message = EmailMultiAlternatives(to=[recipient], alternatives=alternatives, **message_data)
             try:
                 send_message(message, connection)
