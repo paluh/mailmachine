@@ -14,7 +14,7 @@ class MailMachineLoggingHandler(logging.Handler):
         self.from_email = from_email
         self.recipients = recipients
         self.subject = subject
-        self._mail_queue = hotqueue.HotQueue(mail_queue, host=redis_host, port=redis_port,
+        self.mail_queue = hotqueue.HotQueue(mail_queue, host=redis_host, port=redis_port,
                                              password=redis_password)
 
     def emit(self, record):
