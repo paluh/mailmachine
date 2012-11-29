@@ -10,7 +10,7 @@ class MailMachineLoggingHandler(logging.Handler):
 
     def __init__(self, from_email, recipients, subject, mail_queue,
                  redis_host, redis_port, redis_password, *args, **kwargs):
-        super(MailMachineLoggingHandler, self).__init__(self, *args, **kwargs)
+        super(MailMachineLoggingHandler, self).__init__(*args, **kwargs)
         self.from_email = from_email
         self.recipients = recipients
         self.subject = subject
