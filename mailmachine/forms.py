@@ -43,5 +43,6 @@ class EmailMessageForm(Form):
     recipients = (List.using(validators=[Present(), HasAtLeast(minimum=1)])
                       .of(String.named('recipient').using(validators=[IsEmail()])))
     alternatives = (List.using(optional=True)
-                        .of(Dict.of(String.named('content'), String.named('mime'))))
+                        .of(Dict.of(String.named('content'),
+                                    Enum.named('mime').valued('text/html',))))
 

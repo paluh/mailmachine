@@ -36,7 +36,7 @@ class MailMachineLoggingHandler(logging.Handler):
                 info = '<p style="white-space: pre-wrap; word-wrap: break-word;">%s</p>' % info
 
                 html = ('<html><head></head><body>%s<div style="font-size:120%%">%s</div></body></html>')% (info, tb)
-                alternatives.append({'content': html, 'mime': 'html'})
+                alternatives.append({'content': html, 'mime': 'text/html'})
             self.mail_queue.put(mail)
         except (KeyboardInterrupt, SystemExit):
             raise
