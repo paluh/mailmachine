@@ -11,7 +11,7 @@ def load_config(path=None):
             'host': 'localhost',
             'port': '6379',
             'password': '',
-            'mail_queue': 'mail-machine',
+            'mail_queue': 'mailmachine',
         },
         'mailing': {
             'host': None,
