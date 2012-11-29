@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+import argparse
+from email_message import get_connection
+import hotqueue
+import logging
+import logging.handlers
+import os
+import sys
+
+from mailmachine.configuration import load_config
+from mailmachine.mail import send
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Mail machine arguments')
+    default_config = '/etc/mail-machine.yaml'
+    parser.add_argument('-c', '--config', help='Specify configuration file',
+                        default=default_config if os.path.exists(default_config) else None)
+    args = parser.parse_args()
+    config = load_config(args.config)
+    mc = config['mailing']
+    connection = get_connection(mc['host'], mc['port'], username=mc['username'],
+                                password=mc['password'], use_tls=mc['use_tls'])
+
+    rc = config['redis']
+    mail_queue = hotqueue.HotQueue(rc['mail_queue'], host=rc['host'], port=rc['port'],
+                                   password=rc.get('password'))
+
+    lc = config['logging']
+    logger = logging.getLogger('mail-machine')
+    logger.setLevel(getattr(logging, lc['level']))
+    if lc['console']:
+        console_handler = logging.StreamHandler(sys.stdout)
+        logger.addHandler(console_handler)
+
+    if lc['syslog']:
+        syslog_handler = logging.handlers.SysLogHandler(facility=logging.handlers.SysLogHandler.LOG_DAEMON)
+        logger.addHandler(syslog_handler)
+
+    if lc['email'] and lc['admins']:
+        # probably we should use alternative mailing server here
+        subject = 'Log message from %s' % config['hostname']
+        from_addr = 'logging@%s' % config['hostname']
+        smtp_handler = logging.handlers.SMTPHandler((mc['host'], mc['port']), from_addr,
+                                                    lc['admins'], subject=subject,
+                                                    credentials=(mc['username'], mc['password']),
+                                                    secure=() if mc['use_tls'] else None)
+        logger.addHandler(smtp_handler)
+
+    send_mails = mail_queue.worker(lambda mail: send(mail, connection, logger))
+    send_mails()

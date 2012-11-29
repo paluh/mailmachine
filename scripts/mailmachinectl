@@ -8,7 +8,7 @@ from pygments.formatters import TerminalFormatter
 from pygments.lexers import JSONLexer
 import simplejson
 
-import machine
+from mailmachine.configuration import load_config
 
 def _print(result, colors):
     json = simplejson.dumps(result, sort_keys=True, indent=4)
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     list_parser.set_defaults(func=do_list)
 
     args = parser.parse_args()
-    config = machine.load_config(args.config)
+    config = load_config(args.config)
     c = config['redis']
     mail_queue = hotqueue.HotQueue(c['mail_queue'], host=c['host'], port=c['port'],
                                    password=c.get('password'))

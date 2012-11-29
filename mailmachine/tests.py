@@ -1,13 +1,13 @@
 import unittest
 
-import machine
+from . import forms
 
 
 class EmailFormTestCase(unittest.TestCase):
 
     def test_message_validation(self):
         recipients = ['recipient1@example.com', 'recipient@example.com']
-        form = machine.EmailMessageForm({
+        form = forms.EmailMessageForm({
             'subject': 'SPAM',
             'body': 'spam spam spam',
             'from_email': 'spammer@example.com',
@@ -17,7 +17,7 @@ class EmailFormTestCase(unittest.TestCase):
         self.assertEqual([r.value for r in form['recipients']], recipients)
 
     def test_message_validation_checks_recipients_emails_format(self):
-        form = machine.EmailMessageForm({
+        form = forms.EmailMessageForm({
             'subject': 'SPAM',
             'body': 'spam spam spam',
             'from_email': 'spammer@example.com',
@@ -27,7 +27,7 @@ class EmailFormTestCase(unittest.TestCase):
         self.assertTrue(len(form['recipients'][1].errors) > 0)
 
     def test_message_validation_requires_recipients(self):
-        form = machine.EmailMessageForm({
+        form = forms.EmailMessageForm({
             'subject': 'SPAM',
             'body': 'spam spam spam',
             'from_email': 'spammer@example.com',
@@ -40,7 +40,7 @@ class EmailFormTestCase(unittest.TestCase):
             'content': '<html><body><ul><li>spam</li><li>spam</li></ul></body></html>',
             'mime': 'text/html'
         }
-        form = machine.EmailMessageForm({
+        form = forms.EmailMessageForm({
             'subject': 'SPAM',
             'body': 'spam spam spam',
             'from_email': 'spammer@example.com',
