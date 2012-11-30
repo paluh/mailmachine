@@ -23,10 +23,10 @@ def send(mail, connection, logger=None):
     """
     form = EmailMessageForm(mail)
     if form.validate():
-        message_data = form.value
+        message_data = form.value.copy()
         headers = {
-            'Date': formatdate(form.value.pop('sent',
-                                              int(calendar.timegm(datetime.datetime.now().utctimetuple()))))
+            'Date': formatdate(message_data.pop('sent',
+                                                int(calendar.timegm(datetime.datetime.now().utctimetuple()))))
         }
         for recipient in message_data.pop('recipients'):
             alternatives = [(a['content'], a['mime']) for a in message_data.pop('alternatives')]
