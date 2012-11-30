@@ -5,6 +5,7 @@ import hotqueue
 import logging
 import logging.handlers
 import os
+import socket
 import sys
 
 from mailmachine.configuration import load_config
@@ -18,10 +19,6 @@ if __name__ == '__main__':
                         default=default_config if os.path.exists(default_config) else None)
     args = parser.parse_args()
     config = load_config(args.config)
-    mc = config['mailing']
-    connection = get_connection(mc['host'], mc['port'], username=mc['username'],
-                                password=mc['password'], use_tls=mc['use_tls'])
-
     rc = config['redis']
     mail_queue = hotqueue.HotQueue(rc['mail_queue'], host=rc['host'], port=rc['port'],
                                    password=rc.get('password'))
@@ -37,6 +34,7 @@ if __name__ == '__main__':
         syslog_handler = logging.handlers.SysLogHandler(facility=logging.handlers.SysLogHandler.LOG_DAEMON)
         logger.addHandler(syslog_handler)
 
+    mc = config['mailing']
     if lc['email'] and lc['admins']:
         # probably we should use alternative mailing server here
         subject = 'Log message from %s' % config['hostname']
@@ -47,5 +45,16 @@ if __name__ == '__main__':
                                                     secure=() if mc['use_tls'] else None)
         logger.addHandler(smtp_handler)
 
-    send_mails = mail_queue.worker(lambda mail: send(mail, connection, logger))
+    def _send(mail):
+        connection = get_connection(mc['host'], mc['port'], username=mc['username'],
+                                    password=mc['password'], use_tls=mc['use_tls'])
+
+        send(mail, connection, logger)
+        try:
+            connection.quit()
+        except socket.sslerror:
+            # This happens when calling quit() on a TLS connection
+            # sometimes.
+            connection.close()
+    send_mails = mail_queue.worker(_send)
     send_mails()
