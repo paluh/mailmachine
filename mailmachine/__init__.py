@@ -1,9 +1,9 @@
-from .logging import MailMachineLoggingHandler
+from .logging import EnqueueMailLoggingHandler, ImmediateMailLoggingHandler
 from .forms import collect_errors, EmailMessageForm
 from .mail import send_message
 
 
-__all__ = ['enqueue', 'MailMachineLoggingHandler', 'send']
+__all__ = ['enqueue', 'EnqueueMailLoggingHandler', 'ImmediateMailLoggingHandler', 'send']
 
 
 def enqueue(mail_queue, subject, body, from_email, recipients, alternatives=()):

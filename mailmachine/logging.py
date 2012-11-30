@@ -1,36 +1,26 @@
 from __future__ import absolute_import
 import calendar
 import datetime
+from email_message import get_connection
 import logging
-import hotqueue
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import PythonTracebackLexer
 
+from . import enqueue, send
 
-class MailMachineLoggingHandler(logging.Handler):
 
-    def __init__(self, from_email, recipients, subject, mail_queue,
-                 redis_host, redis_port, redis_password, *args, **kwargs):
-        super(MailMachineLoggingHandler, self).__init__(*args, **kwargs)
+class MailMachineLoggingHandlerBase(logging.Handler):
+
+    def __init__(self, from_email, recipients, subject, *args, **kwargs):
+        super(MailMachineLoggingHandlerBase, self).__init__(*args, **kwargs)
         self.from_email = from_email
         self.recipients = recipients
         self.subject = subject
-        self.mail_queue = hotqueue.HotQueue(mail_queue, host=redis_host, port=redis_port,
-                                             password=redis_password)
 
     def emit(self, record):
         try:
             alternatives = []
-            mail = {
-                'alternatives': alternatives,
-                'body': self.format(record),
-                'subject': self.subject,
-                'from_email': self.from_email,
-                'recipients': self.recipients,
-                'sent': int(calendar.timegm(datetime.datetime.now().utctimetuple()))
-            }
-
             if record.exc_text:
                 html_formatter = HtmlFormatter(noclasses=True)
                 tb = highlight(record.exc_text, PythonTracebackLexer(), html_formatter)
@@ -40,9 +30,36 @@ class MailMachineLoggingHandler(logging.Handler):
 
                 html = ('<html><head></head><body>%s<div style="font-size:120%%">%s</div></body></html>')% (info, tb)
                 alternatives.append({'content': html, 'mime': 'text/html'})
-            self.mail_queue.put(mail)
+            sent = int(calendar.timegm(datetime.datetime.now().utctimetuple()))
+            self.send_message(self.mail_queue, body=self.format(record), subject=self.subject, recipients=self.recipients,
+                              sent=sent, alternatives=alternatives)
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
             self.handleError(record)
+
+
+class EnqueueMailLoggingHandler(MailMachineLoggingHandlerBase):
+
+    def __init__(self, mail_queue, *args, **kwargs):
+        self.mail_queue = mail_queue
+
+    def send_message(self, **mail_data):
+        enqueue(self.mail_queue, **mail_data)
+
+
+class ImmediateMailLoggingHandler(MailMachineLoggingHandlerBase):
+
+    def __init__(self, host, port, username, password, use_tls, *args, **kwargs):
+        self.host = host
+        self.port = port
+        self.username = username
+        self.password = password
+        self.use_tls = use_tls
+        super(ImmediateMailLoggingHandler, self).__init__(*args, **kwargs)
+
+    def send_message(self, **mail_data):
+        connection = get_connection(self.host, self.port, username=self.username,
+                                    password=self.password, use_tls=self.use_tls)
+        send(connection, **mail_data)
 
