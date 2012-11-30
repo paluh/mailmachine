@@ -45,4 +45,4 @@ class EmailMessageForm(Form):
     alternatives = (List.using(optional=True)
                         .of(Dict.of(String.named('content'),
                                     Enum.named('mime').valued('text/html',))))
-
+    sent = Integer.using(optional=True)

@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+import calendar
+import datetime
 import logging
 import hotqueue
 from pygments import highlight
@@ -26,6 +28,7 @@ class MailMachineLoggingHandler(logging.Handler):
                 'subject': self.subject,
                 'from_email': self.from_email,
                 'recipients': self.recipients,
+                'sent': int(calendar.timegm(datetime.datetime.now().utctimetuple()))
             }
 
             if record.exc_text:
