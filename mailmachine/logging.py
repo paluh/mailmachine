@@ -31,12 +31,15 @@ class MailMachineLoggingHandlerBase(logging.Handler):
                 html = ('<html><head></head><body>%s<div style="font-size:120%%">%s</div></body></html>')% (info, tb)
                 alternatives.append({'content': html, 'mime': 'text/html'})
             sent = int(calendar.timegm(datetime.datetime.now().utctimetuple()))
-            self.send_message(self.mail_queue, body=self.format(record), subject=self.subject, recipients=self.recipients,
+            self.send_message(body=self.format(record), subject=self.subject, recipients=self.recipients,
                               sent=sent, alternatives=alternatives)
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
             self.handleError(record)
+
+    def send_message(self, **mail_data):
+        raise NotImplementedError()
 
 
 class EnqueueMailLoggingHandler(MailMachineLoggingHandlerBase):
