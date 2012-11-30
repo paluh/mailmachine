@@ -6,13 +6,14 @@ import email_message
 
 from .forms import collect_errors, EmailMessageForm
 
-def enqueue(mail_queue, subject, body, from_email, recipients, alternatives=()):
+def enqueue(mail_queue, subject, body, from_email, recipients, alternatives=(), sent=None):
     mail_data = {
         'subject': subject,
         'body': body,
         'from_email': from_email,
         'recipients': recipients,
         'alternatives': alternatives,
+        'sent': sent,
     }
     form = EmailMessageForm(mail_data)
     if not form.validate():
@@ -21,13 +22,14 @@ def enqueue(mail_queue, subject, body, from_email, recipients, alternatives=()):
         raise ValueError(msg)
     mail_queue.put(mail_data)
 
-def send(connection, subject, body, from_email, recipients, alternatives):
+def send(connection, subject, body, from_email, recipients, alternatives=(), sent=None):
     send_message({
         'subject': subject,
         'body': body,
         'from_email': from_email,
         'recipients': recipients,
         'alternatives': alternatives,
+        'sent': sent,
     }, connection=connection)
 
 def send_message(mail, connection, logger=None):
