@@ -7,7 +7,7 @@ from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import PythonTracebackLexer
 
-from . import enqueue, send
+from .mail import enqueue, send
 
 
 class MailMachineLoggingHandlerBase(logging.Handler):
