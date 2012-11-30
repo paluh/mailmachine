@@ -31,8 +31,8 @@ class MailMachineLoggingHandlerBase(logging.Handler):
                 html = ('<html><head></head><body>%s<div style="font-size:120%%">%s</div></body></html>')% (info, tb)
                 alternatives.append({'content': html, 'mime': 'text/html'})
             sent = int(calendar.timegm(datetime.datetime.now().utctimetuple()))
-            self.send_message(body=self.format(record), subject=self.subject, recipients=self.recipients,
-                              sent=sent, alternatives=alternatives)
+            self.send_message(subject=self.subject, body=self.format(record), from_email=self.from_email,
+                              recipients=self.recipients, alternatives=alternatives, sent=sent)
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
