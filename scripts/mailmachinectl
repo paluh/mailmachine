@@ -3,12 +3,15 @@ import argparse
 import hotqueue
 import os
 import pprint
+from email_message import get_connection
 from pygments import highlight
 from pygments.formatters import TerminalFormatter
 from pygments.lexers import JSONLexer
 import simplejson
 
+from mailmachine import enqueue, send
 from mailmachine.configuration import load_config
+
 
 def _print(result, colors):
     json = simplejson.dumps(result, sort_keys=True, indent=4)
@@ -17,11 +20,25 @@ def _print(result, colors):
     else:
         pprint.pprint(json)
 
-def do_mail(args, mail_queue):
-    mail = simplejson.loads(args.mail_data)
-    mail_queue.put(mail)
+def do_enqueue(args, config):
+    c = config['redis']
+    mail_queue = hotqueue.HotQueue(c['mail_queue'], host=c['host'], port=c['port'],
+                                   password=c.get('password'))
 
-def do_list(args, mail_queue):
+    mail = simplejson.loads(args.mail_data)
+    enqueue(mail_queue, **mail)
+
+def do_mail(args, config):
+    mc = config['mail']
+    mail = simplejson.loads(args.mail_data)
+    connection = get_connection(mc['host'], mc['port'], username=mc['username'],
+                                password=mc['password'], use_tls=mc['use_tls'])
+    send(connection, **mail)
+
+def do_list(args, config):
+    c = config['redis']
+    mail_queue = hotqueue.HotQueue(c['mail_queue'], host=c['host'], port=c['port'],
+                                   password=c.get('password'))
     mails = []
     for mail in [mail_queue.serializer.loads(c) for c in mail_queue._HotQueue__redis.lrange(mail_queue.key, 0, len(mail_queue)-1)]:
         mail_queue._HotQueue__redis
@@ -36,9 +53,13 @@ if __name__ == '__main__':
                         default=default_config if os.path.exists(default_config) else None)
     subparsers = parser.add_subparsers(help='Subcommands help')
 
+    enqueue_parser = subparsers.add_parser('enqueue')
+    enqueue_parser.add_argument('mail_data')
+    enqueue_parser.set_defaults(func=do_enqueue)
+
     mail_parser = subparsers.add_parser('mail')
     mail_parser.add_argument('mail_data')
-    mail_parser.set_defaults(func=do_mail)
+    mail_parser.set_defaults(func=do_enqueue)
 
     list_parser = subparsers.add_parser('list')
     list_parser.add_argument('--no-colors', help='Print result in colors',
@@ -47,8 +68,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     config = load_config(args.config)
-    c = config['redis']
-    mail_queue = hotqueue.HotQueue(c['mail_queue'], host=c['host'], port=c['port'],
-                                   password=c.get('password'))
-
-    args.func(args, mail_queue)
+    args.func(args, config)

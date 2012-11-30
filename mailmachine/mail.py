@@ -2,12 +2,12 @@ from __future__ import absolute_import
 import calendar
 import datetime
 from email.utils import formatdate
-from email_message import EmailMultiAlternatives, send_message
+import email_message
 
 from .forms import collect_errors, EmailMessageForm
 
 
-def send(mail, connection, logger=None):
+def send_message(mail, connection, logger=None):
     """Send mail which should be in following format:
         >>> mail = {
         ... 'subject': 'SPAM',
@@ -30,9 +30,10 @@ def send(mail, connection, logger=None):
         }
         for recipient in message_data.pop('recipients'):
             alternatives = [(a['content'], a['mime']) for a in message_data.pop('alternatives')]
-            message = EmailMultiAlternatives(to=[recipient], alternatives=alternatives, headers=headers, **message_data)
+            message = email_message.EmailMultiAlternatives(to=[recipient], alternatives=alternatives,
+                                                           headers=headers, **message_data)
             try:
-                send_message(message, connection)
+                email_message.send_message(message, connection)
             except Exception, e:
                 if logger:
                     logger.exception(e)

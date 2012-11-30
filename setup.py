@@ -28,5 +28,5 @@ setup(
     packages=['mailmachine'],
     scripts=['scripts/mailmachined', 'scripts/mailmachinectl'],
     zip_safe=False,
-    version = '2012.11.1',
+    version = '2012.11.2',
 )

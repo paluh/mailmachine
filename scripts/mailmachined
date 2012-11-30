@@ -9,7 +9,7 @@ import socket
 import sys
 
 from mailmachine.configuration import load_config
-from mailmachine.mail import send
+from mailmachine.mail import send_message
 
 
 if __name__ == '__main__':
@@ -49,7 +49,7 @@ if __name__ == '__main__':
         connection = get_connection(mc['host'], mc['port'], username=mc['username'],
                                     password=mc['password'], use_tls=mc['use_tls'])
 
-        send(mail, connection, logger)
+        send_message(mail, connection, logger)
         try:
             connection.quit()
         except socket.sslerror:
