@@ -43,6 +43,7 @@ class EnqueueMailLoggingHandler(MailMachineLoggingHandlerBase):
 
     def __init__(self, mail_queue, *args, **kwargs):
         self.mail_queue = mail_queue
+        super(EnqueueMailLoggingHandler, self).__init__(*args, **kwargs)
 
     def send_message(self, **mail_data):
         enqueue(self.mail_queue, **mail_data)
