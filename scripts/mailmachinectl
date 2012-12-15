@@ -20,12 +20,23 @@ def _print(result, colors):
     else:
         pprint.pprint(json)
 
+def _build_attachments(attachments_info):
+    attachments = []
+    for file_path, mime in attachments_info:
+        attachments.append({
+            'file_name': os.path.basename(file_path),
+            'content': open(file_path, 'r').read(),
+            'mime': mime,
+        })
+    return attachments
+
 def do_enqueue(args, config):
     c = config['redis']
     mail_queue = hotqueue.HotQueue(c['mail_queue'], host=c['host'], port=c['port'],
                                    password=c.get('password'))
 
     mail = simplejson.loads(args.mail_data)
+    mail['attachments'] = _build_attachments(mail.get('attachments', []))
     enqueue(mail_queue, **mail)
 
 def do_mail(args, config):
@@ -33,6 +44,7 @@ def do_mail(args, config):
     mail = simplejson.loads(args.mail_data)
     connection = get_connection(mc['host'], mc['port'], username=mc['username'],
                                 password=mc['password'], use_tls=mc['use_tls'])
+    mail['attachments'] = _build_attachments(mail.get('attachments', []))
     send(connection, **mail)
 
 def do_list(args, config):

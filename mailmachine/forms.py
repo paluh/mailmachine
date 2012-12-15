@@ -1,4 +1,4 @@
-from flatland.schema import Boolean, Dict, Enum, Form, Integer, List, String
+from flatland.schema import Boolean, Dict, Enum, Form, Integer, List, Scalar, String
 from flatland.validation.containers import HasAtLeast
 from flatland.validation.scalars import Present
 from flatland.validation.network import IsEmail
@@ -35,6 +35,22 @@ class ConfigForm(Form):
                       Boolean.named('email'),
                       List.named('admins').of(String.named('admin').using(validators=[IsEmail()])))
 
+
+class BinaryData(Scalar):
+    """peccata mortalia - feed binary data into textarianin"""
+
+    def set(self, value):
+        self.raw = self.value = value
+        return True
+
+    @property
+    def u(self):
+        raise Exception('You don\'t want to see this...')
+
+    def serialize(self):
+        raise Exception('You don\'t want to serialize this...')
+
+
 class EmailMessageForm(Form):
 
     subject = RequiredString
@@ -45,4 +61,8 @@ class EmailMessageForm(Form):
     alternatives = (List.using(optional=True)
                         .of(Dict.of(String.named('content'),
                                     Enum.named('mime').valued('text/html',))))
+    attachments = (List.using(optional=True)
+                       .of(Dict.of(String.named('file_name'),
+                                   BinaryData.named('content'),
+                                   Enum.named('mime').valued('text/html', 'application/pdf'))))
     sent = Integer.using(optional=True)

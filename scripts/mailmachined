@@ -57,4 +57,7 @@ if __name__ == '__main__':
             # sometimes.
             connection.close()
     send_mails = mail_queue.worker(_send)
-    send_mails()
+    try:
+        send_mails()
+    except Exception, e:
+        logger.exception(e)

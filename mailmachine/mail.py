@@ -6,13 +6,15 @@ import email_message
 
 from .forms import collect_errors, EmailMessageForm
 
-def enqueue(mail_queue, subject, body, from_email, recipients, alternatives=(), sent=None):
+def enqueue(mail_queue, subject, body, from_email, recipients, alternatives=None,
+            attachments=None, sent=None):
     mail_data = {
         'subject': subject,
         'body': body,
         'from_email': from_email,
         'recipients': recipients,
         'alternatives': alternatives,
+        'attachments': attachments,
         'sent': sent,
     }
     form = EmailMessageForm(mail_data)
@@ -22,13 +24,15 @@ def enqueue(mail_queue, subject, body, from_email, recipients, alternatives=(), 
         raise ValueError(msg)
     mail_queue.put(mail_data)
 
-def send(connection, subject, body, from_email, recipients, alternatives=(), sent=None):
+def send(connection, subject, body, from_email, recipients, alternatives=None,
+         attachments=None, sent=None):
     send_message({
         'subject': subject,
         'body': body,
         'from_email': from_email,
         'recipients': recipients,
         'alternatives': alternatives,
+        'attachments': attachments,
         'sent': sent,
     }, connection=connection)
 
@@ -53,10 +57,13 @@ def send_message(mail, connection, logger=None):
             'Date': formatdate(message_data.pop('sent',
                                                 int(calendar.timegm(datetime.datetime.now().utctimetuple()))))
         }
+        alternatives = [(a['content'], a['mime']) for a in message_data.pop('alternatives')]
+        attachments = [(a['file_name'], a['content'], a['mime']) for a in  message_data.pop('attachments')]
         for recipient in message_data.pop('recipients'):
-            alternatives = [(a['content'], a['mime']) for a in message_data.pop('alternatives')]
             message = email_message.EmailMultiAlternatives(to=[recipient], alternatives=alternatives,
                                                            headers=headers, **message_data)
+            for attachment in attachments:
+                message.attach(*attachment)
             try:
                 email_message.send_message(message, connection)
             except Exception, e:
