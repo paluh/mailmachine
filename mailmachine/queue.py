@@ -5,7 +5,7 @@ class MailQueue(object):
 
     def __init__(self, name, **kwargs):
         self.name = name
-        kwargs['serializer'] = kwargs.get('serializer', simplejson)
+        kwargs.setdefault('serializer', simplejson)
         self._queue = hotqueue.HotQueue(name, **kwargs)
 
     def put(self, from_email, recipients, msg):
