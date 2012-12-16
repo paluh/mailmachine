@@ -24,7 +24,7 @@
 
 You can also test mailmachine from command line - you have to pass json as argument:
 
-    $ mailmachinectl -c example_config.yaml enqueue '{"subject": spam", "body": "spam spam spam", "recipients": ["poor@recipient.com"], "from_email": "spammer@example.com", "attachments": [["/home/spammer/documents/spam.pdf", "application/pdf"]]}'
+    $ mailmachinectl -c example_config.yaml send '{"subject": spam", "body": "spam spam spam", "recipients": ["poor@recipient.com"], "from_email": "spammer@example.com", "attachments": [["/home/spammer/documents/spam.pdf", "application/pdf"]]}'
 
 You can also use `enqueue`:
 

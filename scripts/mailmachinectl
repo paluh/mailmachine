@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import argparse
-import hotqueue
 import os
 import pprint
 from email_message import get_connection
@@ -46,15 +45,11 @@ def do_send(args, config):
     mail['attachments'] = _build_attachments(mail.get('attachments', []))
     send(connection, **mail)
 
-def do_list(args, config):
+def do_snapshot(args, config):
     c = config['redis']
-    mail_queue = hotqueue.HotQueue(c['mail_queue'], host=c['host'], port=c['port'],
-                                   password=c.get('password'))
-    mails = []
-    for mail in [mail_queue.serializer.loads(c) for c in mail_queue._HotQueue__redis.lrange(mail_queue.key, 0, len(mail_queue)-1)]:
-        mail_queue._HotQueue__redis
-        mails.append(mail)
-    _print(mails, not args.no_colors)
+    mail_queue = MailQueue(c['mail_queue'], host=c['host'], port=c['port'],
+                           password=c.get('password'))
+    _print(mail_queue.snapshot(), not args.no_colors)
 
 
 if __name__ == '__main__':
@@ -72,10 +67,10 @@ if __name__ == '__main__':
     send_parser.add_argument('mail_data')
     send_parser.set_defaults(func=do_send)
 
-    list_parser = subparsers.add_parser('list')
-    list_parser.add_argument('--no-colors', help='Print result in colors',
+    snapshot_parser = subparsers.add_parser('snapshot')
+    snapshot_parser.add_argument('--no-colors', help='Print result in colors',
                              default=False, action='store_true')
-    list_parser.set_defaults(func=do_list)
+    snapshot_parser.set_defaults(func=do_snapshot)
 
     args = parser.parse_args()
     config = load_config(args.config)
