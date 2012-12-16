@@ -11,6 +11,7 @@ import simplejson
 
 from mailmachine import enqueue, send
 from mailmachine.configuration import load_config
+from mailmachine.queue import MailQueue
 
 
 def _print(result, colors):
@@ -23,24 +24,22 @@ def _print(result, colors):
 def _build_attachments(attachments_info):
     attachments = []
     for file_path, mime in attachments_info:
-        attachments.append({
-            'file_name': os.path.basename(file_path),
-            'content': open(file_path, 'r').read(),
-            'mime': mime,
-        })
+        attachments.append((os.path.basename(file_path),
+                            open(file_path, 'r').read(),
+                            mime))
     return attachments
 
 def do_enqueue(args, config):
     c = config['redis']
-    mail_queue = hotqueue.HotQueue(c['mail_queue'], host=c['host'], port=c['port'],
-                                   password=c.get('password'))
+    mail_queue = MailQueue(c['mail_queue'], host=c['host'], port=c['port'],
+                           password=c.get('password'))
 
     mail = simplejson.loads(args.mail_data)
     mail['attachments'] = _build_attachments(mail.get('attachments', []))
     enqueue(mail_queue, **mail)
 
-def do_mail(args, config):
-    mc = config['mail']
+def do_send(args, config):
+    mc = config['mailing']
     mail = simplejson.loads(args.mail_data)
     connection = get_connection(mc['host'], mc['port'], username=mc['username'],
                                 password=mc['password'], use_tls=mc['use_tls'])
@@ -69,9 +68,9 @@ if __name__ == '__main__':
     enqueue_parser.add_argument('mail_data')
     enqueue_parser.set_defaults(func=do_enqueue)
 
-    mail_parser = subparsers.add_parser('mail')
-    mail_parser.add_argument('mail_data')
-    mail_parser.set_defaults(func=do_enqueue)
+    send_parser = subparsers.add_parser('send')
+    send_parser.add_argument('mail_data')
+    send_parser.set_defaults(func=do_send)
 
     list_parser = subparsers.add_parser('list')
     list_parser.add_argument('--no-colors', help='Print result in colors',
