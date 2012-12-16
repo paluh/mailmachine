@@ -23,6 +23,7 @@ def _build_messages(subject, body, from_email, recipients, alternatives=None, at
         'Date': formatdate(sent or int(calendar.timegm(datetime.datetime.now().utctimetuple())))
     }
     messages = []
+    attachments = attachments or []
     for recipient in recipients:
         message = email_message.EmailMultiAlternatives(to=[recipient], alternatives=alternatives,
                                                        headers=headers, subject=subject, body=body,
