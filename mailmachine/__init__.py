@@ -1,6 +1,8 @@
 from .logging import EnqueueMailLoggingHandler, ImmediateMailLoggingHandler
 from .mail import enqueue, send
+from .queue import MailQueue
 
-__all__ = ['enqueue', 'EnqueueMailLoggingHandler', 'ImmediateMailLoggingHandler', 'send']
+__all__ = ['enqueue', 'EnqueueMailLoggingHandler', 'ImmediateMailLoggingHandler',
+           'MailQueue', 'send']
 
 
