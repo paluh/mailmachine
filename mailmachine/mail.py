@@ -16,7 +16,8 @@ def send(connection, subject, body, from_email, recipients, alternatives=None,
     messages = _build_messages(subject, body, from_email, recipients, alternatives, attachments, sent)
 
     for from_email, recipients, msg in messages:
-        connection.sendmail(from_email, recipients, msg)
+        # FIXME: we should check encoding headers and then encode...
+        connection.sendmail(from_email, recipients, msg.encode('utf-8') if isinstance('utf-8') else msg)
 
 def _build_messages(subject, body, from_email, recipients, alternatives=None, attachments=None, sent=None):
     headers = {

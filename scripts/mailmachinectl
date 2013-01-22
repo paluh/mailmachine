@@ -51,6 +51,13 @@ def do_snapshot(args, config):
                            password=c.get('password'))
     _print(mail_queue.snapshot(), not args.no_colors)
 
+def do_cleanup(args, config):
+    c = config['redis']
+    mail_queue = MailQueue(c['mail_queue'], host=c['host'], port=c['port'],
+                           password=c.get('password'))
+    for m in mail_queue._queue.consume(block=False):
+        print 'Dropping:', m[0]
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Put mail to mailing queue')
@@ -71,6 +78,9 @@ if __name__ == '__main__':
     snapshot_parser.add_argument('--no-colors', help='Print result in colors',
                              default=False, action='store_true')
     snapshot_parser.set_defaults(func=do_snapshot)
+
+    cleanup_parser = subparsers.add_parser('cleanup')
+    cleanup_parser.set_defaults(func=do_cleanup)
 
     args = parser.parse_args()
     config = load_config(args.config)

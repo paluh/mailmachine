@@ -48,7 +48,8 @@ if __name__ == '__main__':
         connection = get_connection(mc['host'], mc['port'], username=mc['username'],
                                     password=mc['password'], use_tls=mc['use_tls'])
 
-        connection.sendmail(*msg)
+        # FIXME: we should check encoding headers and then encode...
+        connection.sendmail(msg[0], msg[1], msg[2] if isinstance(msg[2], str) else msg[2].encode('utf-8'))
         try:
             connection.quit()
         except socket.sslerror:
