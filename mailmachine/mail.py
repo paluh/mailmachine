@@ -31,9 +31,9 @@ def _build_messages(subject, body, from_email, recipients, alternatives=None, at
                                                        from_email=from_email)
         for attachment in attachments:
             message.attach(*attachment)
-        from_email = email_message.sanitize_address(message.from_email, message.encoding)
+        fe = email_message.sanitize_address(message.from_email, message.encoding)
         recipients = [email_message.sanitize_address(addr, message.encoding) for addr in message.recipients()]
-        messages.append((from_email, recipients,
+        messages.append((fe, recipients,
                          message.message().as_string()))
     return messages
 
