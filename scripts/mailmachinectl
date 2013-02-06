@@ -2,11 +2,14 @@
 import argparse
 import os
 import pprint
+import email
 from email_message import get_connection
 from pygments import highlight
 from pygments.formatters import TerminalFormatter
 from pygments.lexers import JSONLexer
+from pygments.token import Keyword, Name, Punctuation, Comment, String, Whitespace
 import simplejson
+import sys
 
 from mailmachine import enqueue, send
 from mailmachine.configuration import load_config
@@ -49,7 +52,62 @@ def do_snapshot(args, config):
     c = config['redis']
     mail_queue = MailQueue(c['mail_queue'], host=c['host'], port=c['port'],
                            password=c.get('password'))
-    _print(mail_queue.snapshot(), not args.no_colors)
+    parser = email.Parser.Parser()
+    tokens = []
+    separator = (Comment, '\n\n-------------------------------------------------------------------\n\n')
+    for sender, recipients, msg in mail_queue.snapshot()[-5:]:
+        tokens.append(separator)
+        sender = email.utils.parseaddr(sender)
+        tokens.append((Keyword.Type, 'Sender: '))
+        tokens.append((Name.Variable, email.utils.formataddr([p[0] for s in sender for p in email.header.decode_header(s)])))
+        tokens.append((Whitespace, '\n'))
+        tokens.append((Keyword.Type, 'Recipients: '))
+        for r in recipients:
+            for i,p in enumerate(email.header.decode_header(r)):
+                if i > 0:
+                    tokens.append((Punctuation, ', '))
+                tokens.append((Name.Variable, p[0]))
+        tokens.append((Whitespace, '\n'))
+        msg = parser.parsestr(msg.encode('utf-8'))
+        tokens.append((Keyword.Type, 'Subject: '))
+        tokens.append((Name.Variable, msg.get('Subject')))
+        tokens.append((Whitespace, '\n'))
+        body = None
+        attachments = []
+        for part in msg.walk():
+            if part.get('Content-Disposition', None):
+                ds = {}
+                for p in part.get('Content-Disposition').split(';'):
+                    if '=' in p:
+                        n, v = p.split('=', 1)
+                        ds[n.strip().lower()] = v.strip()
+                filename = next((v for n,v in ds.items() if n.lower()=='filename'), None)
+                if filename:
+                    attachments.append((filename, part.get_content_type()))
+            elif part.get_content_type() == 'text/plain':
+                body = '' if body is None else body
+                body += unicode(
+                    part.get_payload(decode=True),
+                    part.get_content_charset(),
+                    'replace'
+                ).encode('utf8','replace')
+        tokens.append((Keyword.Type, 'Body: '))
+        tokens.append((Whitespace, '\n'))
+        tokens.append((Whitespace, '\n'))
+        tokens.append((String, body.decode('utf-8')))
+        tokens.append((Whitespace, '\n'))
+        tokens.append((Whitespace, '\n'))
+        if attachments:
+            tokens.append((Keyword.Type, 'Attachments: '))
+            for i,a in enumerate(attachments):
+                if i > 0:
+                    tokens.append((Punctuation, ', '))
+                tokens.append((Name.Variable, a[0]))
+                tokens.append((Whitespace, ' '))
+                tokens.append((Name.Tag, a[1]))
+    tokens.append(separator)
+    formatter = TerminalFormatter()
+    formatter.format(tokens, sys.stdout)
 
 def do_cleanup(args, config):
     c = config['redis']
