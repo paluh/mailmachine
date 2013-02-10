@@ -55,7 +55,7 @@ def do_snapshot(args, config):
     parser = email.Parser.Parser()
     tokens = []
     separator = (Comment, '\n\n-------------------------------------------------------------------\n\n')
-    for sender, recipients, msg in mail_queue.snapshot()[-5:]:
+    for sender, recipients, msg in mail_queue.snapshot():
         tokens.append(separator)
         sender = email.utils.parseaddr(sender)
         tokens.append((Keyword.Type, 'Sender: '))
