@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from email_message import get_connection
-import great_justice
+import great_justice.logging
 import logging
 
 from .mail import enqueue, send
