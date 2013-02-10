@@ -5,6 +5,7 @@ except ImportError:
 
 REQUIREMENTS = [
     'email_message >= 2012-9-1',
+    'great_justice >= 2012.6.8',
     'hotqueue',
     'flatland',
     'pyyaml',
@@ -13,7 +14,7 @@ REQUIREMENTS = [
 ]
 DEPENDENCY_LINKS = [
     'git+git://github.com/paluh/email-message.git#egg=email_message-2012-9-1',
-    'git+git://github.com/paluh/great-justice.git#egg=great_justice-dev',
+    'git+git://github.com/paluh/great-justice.git#egg=great_justice-2012.6.8',
 ]
 setup(
     name='mailmachine',
