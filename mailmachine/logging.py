@@ -19,11 +19,13 @@ class MailMachineLoggingHandlerBase(logging.Handler):
 
     def emit(self, record):
         try:
+            alternatives = []
             if record.exc_info and self.html_formatter:
                 html =  self.html_formatter.format(record)
                 html = '<html><head></head><body>%s</body></html>' % html
+                alternatives = [(html, 'text/html')]
             self.send_message(subject=self.subject, body=self.format(record), from_email=self.from_email,
-                              recipients=self.recipients, alternatives=[(html, 'text/html')])
+                              recipients=self.recipients, alternatives=alternatives)
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
