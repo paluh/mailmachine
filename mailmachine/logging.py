@@ -1,11 +1,7 @@
 from __future__ import absolute_import
-import calendar
-import datetime
 from email_message import get_connection
+import great_justice
 import logging
-from pygments import highlight
-from pygments.formatters import HtmlFormatter
-from pygments.lexers import PythonTracebackLexer
 
 from .mail import enqueue, send
 
@@ -13,26 +9,21 @@ from .mail import enqueue, send
 class MailMachineLoggingHandlerBase(logging.Handler):
 
     def __init__(self, from_email, recipients, subject, *args, **kwargs):
+        formatter = kwargs.get('formatter', great_justice.logging.Formatter())
+        self.html_formatter = kwargs.pop('html_formatter', great_justice.logging.HtmlFormatter())
         super(MailMachineLoggingHandlerBase, self).__init__(*args, **kwargs)
         self.from_email = from_email
         self.recipients = recipients
         self.subject = subject
+        self.formatter = formatter
 
     def emit(self, record):
         try:
-            alternatives = []
-            if record.exc_text:
-                html_formatter = HtmlFormatter(noclasses=True)
-                tb = highlight(record.exc_text, PythonTracebackLexer(), html_formatter)
-
-                info = (self.formatter or logging._defaultFormatter)._fmt % record.__dict__
-                info = '<p style="white-space: pre-wrap; word-wrap: break-word;">%s</p>' % info
-
-                html = ('<html><head></head><body>%s<div style="font-size:120%%">%s</div></body></html>')% (info, tb)
-                alternatives.append((html, 'text/html'))
-            sent = int(calendar.timegm(datetime.datetime.now().utctimetuple()))
+            if record.exc_info and self.html_formatter:
+                html =  self.html_formatter.format(record)
+                html = '<html><head></head><body>%s</body></html>' % html
             self.send_message(subject=self.subject, body=self.format(record), from_email=self.from_email,
-                              recipients=self.recipients, alternatives=alternatives, sent=sent)
+                              recipients=self.recipients, alternatives=[(html, 'text/html')])
         except (KeyboardInterrupt, SystemExit):
             raise
         except:

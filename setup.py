@@ -13,6 +13,7 @@ REQUIREMENTS = [
 ]
 DEPENDENCY_LINKS = [
     'git+git://github.com/paluh/email-message.git#egg=email_message-2012-9-1',
+    'git+git://github.com/paluh/great-justice.git#egg=great_justice-dev',
 ]
 setup(
     name='mailmachine',
@@ -28,5 +29,5 @@ setup(
     packages=['mailmachine'],
     scripts=['scripts/mailmachined', 'scripts/mailmachinectl'],
     zip_safe=False,
-    version = '2013.2.2',
+    version = '2013.2.3',
 )
