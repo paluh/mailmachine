@@ -9,7 +9,6 @@ REQUIREMENTS = [
     'hotqueue',
     'flatland',
     'pyyaml',
-    'pygments',
     'simplejson',
 ]
 DEPENDENCY_LINKS = [
