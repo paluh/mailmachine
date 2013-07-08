@@ -6,7 +6,7 @@ import email
 from email_message import get_connection
 from pygments import highlight
 from pygments.formatters import TerminalFormatter
-from pygments.lexers import JSONLexer
+import pygments.lexers
 from pygments.token import Keyword, Name, Punctuation, Comment, String, Whitespace
 import simplejson
 import sys
@@ -19,7 +19,7 @@ from mailmachine.queue import MailQueue
 def _print(result, colors):
     json = simplejson.dumps(result, sort_keys=True, indent=4)
     if colors:
-        print highlight(json, JSONLexer(), TerminalFormatter())
+        print highlight(json, pygments.lexers.get_lexer_by_name('json'), TerminalFormatter())
     else:
         pprint.pprint(json)
 
