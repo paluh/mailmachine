@@ -24,7 +24,11 @@ class MailMachineLoggingHandlerBase(logging.Handler):
                 html =  self.html_formatter.format(record)
                 html = '<html><head></head><body>%s</body></html>' % html
                 alternatives = [(html, 'text/html')]
-            self.send_message(subject=self.subject, body=self.format(record), from_email=self.from_email,
+            if callable(self.subject):
+                subject = self.subject(record)
+            else:
+                subject = self.subject
+            self.send_message(subject=subject, body=self.format(record), from_email=self.from_email,
                               recipients=self.recipients, alternatives=alternatives)
         except (KeyboardInterrupt, SystemExit):
             raise
