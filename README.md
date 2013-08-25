@@ -1,6 +1,10 @@
 Mailmachine
 ==========
 
+This library implements simple, single threaded mailing worker based on redis queue (hotqueue, to be exact).
+
+Protocol is language agnostic as worker expectes json serialized messages, but library provides only Python bindings. Of course worker daemon is also written in Python.
+
 # Usage
 
     >>> from mailmachine import enqueue, get_connection, MailQueue, send
