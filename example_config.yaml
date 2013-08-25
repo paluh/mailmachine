@@ -1,0 +1,15 @@
+hostname: 'dev2.serwery.nadaje.com'
+mailing:
+  host: 'smtp.example.com'
+  port: '587'
+  use_tls: True
+  username: 'spammer@example.com'
+  password: 'p4ssw0rd'
+logging:
+  # send logs to this address
+  admins:
+    - 'spammer@example.com'
+  email: True
+  level: 'DEBUG'
+redis:
+    'mail_queue': 'mailmachine'
