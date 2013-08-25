@@ -31,18 +31,28 @@ def _build_attachments(attachments_info):
                             mime))
     return attachments
 
+def _get_mail_params(args):
+    return {
+        'subject': args.subject,
+        'body': args.body,
+        'recipients': args.recipients,
+        'from_email': args.from_email,
+        'recipients': args.recipients,
+        'attachments': args.attachments,
+    }
+
 def do_enqueue(args, config):
     c = config['redis']
     mail_queue = MailQueue(c['mail_queue'], host=c['host'], port=c['port'],
                            password=c.get('password'))
 
-    mail = simplejson.loads(args.mail_data)
+    mail = _get_mail_params(args)
     mail['attachments'] = _build_attachments(mail.get('attachments', []))
     enqueue(mail_queue, **mail)
 
 def do_send(args, config):
     mc = config['mailing']
-    mail = simplejson.loads(args.mail_data)
+    mail = _get_mail_params(args)
     connection = get_connection(mc['host'], mc['port'], username=mc['username'],
                                 password=mc['password'], use_tls=mc['use_tls'])
     mail['attachments'] = _build_attachments(mail.get('attachments', []))
@@ -125,12 +135,20 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers(help='Subcommands help')
 
     enqueue_parser = subparsers.add_parser('enqueue')
-    enqueue_parser.add_argument('mail_data')
     enqueue_parser.set_defaults(func=do_enqueue)
 
     send_parser = subparsers.add_parser('send')
-    send_parser.add_argument('mail_data')
     send_parser.set_defaults(func=do_send)
+
+    for p in [send_parser, enqueue_parser]:
+        p.add_argument('-s', '--subject', action='store', required=True)
+        p.add_argument('-b', '--body', action='store', required=True)
+        p.add_argument('-f', '--from-email', action='store', required=True)
+        p.add_argument('-r', '--recipient', action='append', dest='recipients',
+                       required=True, metavar='RECIPIENT', help='you can use this option multiple times')
+        p.add_argument('-a', '--attachment', action='append', metavar=('PATH', 'MIME_TYPE'),
+                       dest='attachments', nargs=2, default=[],
+                       help=('for example: ~/file.pdf application/pdf'))
 
     snapshot_parser = subparsers.add_parser('snapshot')
     snapshot_parser.add_argument('--no-colors', help='Print result in colors',
@@ -139,6 +157,10 @@ if __name__ == '__main__':
 
     cleanup_parser = subparsers.add_parser('cleanup')
     cleanup_parser.set_defaults(func=do_cleanup)
+
+    for p in [cleanup_parser, snapshot_parser, enqueue_parser, send_parser]:
+        p.add_argument('-c', '--config', help='Specify configuration file',
+                        default=default_config if os.path.exists(default_config) else None)
 
     args = parser.parse_args()
     config = load_config(args.config)

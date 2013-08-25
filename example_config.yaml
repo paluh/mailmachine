@@ -1,4 +1,4 @@
-hostname: 'dev2.serwery.nadaje.com'
+hostname: 'worker.example.com'
 mailing:
   host: 'smtp.example.com'
   port: '587'

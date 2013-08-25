@@ -27,11 +27,11 @@ Protocol is language agnostic as worker expectes json serialized messages, but l
 
 # Command line testing
 
-You can also test mailmachine from command line - you have to pass json as argument:
+You can also test mailmachine from command line:
 
-    $ mailmachinectl -c example_config.yaml send '{"subject": spam", "body": "spam spam spam", "recipients": ["poor@recipient.com"], "from_email": "spammer@example.com", "attachments": [["/home/spammer/documents/spam.pdf", "application/pdf"]]}'
+    $ mailmachinectl send -c config.yaml -s "spam" -b "spam spam spam" -r "poor@recipient.com" -f "spammer@example.com" -a "/home/spammer/documents/spam.pdf" "application/pdf"
 
 You can also use `enqueue`:
 
     $ mailmachined -c config.yaml &
-    $ mailmachinectl -c config.yaml enqueue '{"subject": spam", "body": "spam spam spam", "recipients": ["poor@recipient.com"], "from_email": "spammer@example.com", "attachments": [["/home/spammer/documents/spam.pdf", "application/pdf"]]}'
+    $ mailmachinectl enqueue -c config.yaml -s "spam" -b "spam spam spam" -r "poor@recipient.com" -f "spammer@example.com" -a "/home/spammer/documents/spam.pdf" "application/pdf"
