@@ -1,8 +1,7 @@
 from __future__ import absolute_import
-import calendar
-import datetime
 from email.utils import formatdate
 import email_message
+import time
 
 def enqueue(mail_queue, subject, body, from_email, recipients, alternatives=None,
             attachments=None, sent=None):
@@ -21,7 +20,7 @@ def send(connection, subject, body, from_email, recipients, alternatives=None,
 
 def _build_messages(subject, body, from_email, recipients, alternatives=None, attachments=None, sent=None):
     headers = {
-        'Date': formatdate(sent or int(calendar.timegm(datetime.datetime.now().utctimetuple())))
+        'Date': formatdate(sent or int(time.time()))
     }
     messages = []
     attachments = attachments or []
