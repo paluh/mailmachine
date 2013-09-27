@@ -14,10 +14,10 @@ CLASSIFIERS = [
 ]
 
 REQUIREMENTS = [
-    'email_message >= 2012.9.1',
-    'great_justice_with_logging >= 2013.2.1',
+    'email_message == 2012.9.1',
+    'great_justice_with_logging == 2013.2.10',
     'hotqueue',
-    'flatland',
+    'flatland == 0.0.2',
     'pyyaml',
     'simplejson',
 ]
