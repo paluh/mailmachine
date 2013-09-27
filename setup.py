@@ -17,7 +17,7 @@ REQUIREMENTS = [
     'email_message == 2012.9.1',
     'great_justice_with_logging == 2013.2.10',
     'hotqueue',
-    'flatland == 0.0.2',
+    'flatland == dev',
     'pyyaml',
     'simplejson',
 ]
