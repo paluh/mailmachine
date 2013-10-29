@@ -3,6 +3,8 @@ try:
 except ImportError:
     from distutils.core import setup
 
+import mailmachine
+
 CLASSIFIERS = [
     'Development Status :: 5 - Production/Stable',
     'Environment :: Console',
@@ -37,5 +39,5 @@ setup(
     packages=['mailmachine'],
     scripts=['scripts/mailmachined', 'scripts/mailmachinectl'],
     zip_safe=False,
-    version = '2013.7.8',
+    version = mailmachine.__version__,
 )
