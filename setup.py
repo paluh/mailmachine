@@ -24,8 +24,8 @@ REQUIREMENTS = [
     'simplejson',
 ]
 DEPENDENCY_LINKS = [
-    'git+git://github.com/paluh/email-message.git#egg=email-message-2012.9.1',
-    'git+git://github.com/paluh/great-justice-with-logging.git#egg=great-justice-with-logging-2013.2.10',
+    'git+git://github.com/paluh/email-message.git@1.0#egg=email-message-2012.9.1',
+    'git+git://github.com/paluh/great-justice-with-logging.git@1.0#egg=great-justice-with-logging-2013.2.10',
 ]
 setup(
     name='mailmachine',
