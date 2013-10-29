@@ -16,8 +16,8 @@ CLASSIFIERS = [
 ]
 
 REQUIREMENTS = [
-    'email-message == 2012.9.1',
-    'great-justice-with-logging == 2013.2.10',
+    'email-message == 1.0',
+    'great-justice-with-logging == 1.0',
     'hotqueue',
     'flatland == dev',
     'pyyaml',
