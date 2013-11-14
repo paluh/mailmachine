@@ -15,7 +15,7 @@ CLASSIFIERS = [
 
 REQUIREMENTS = [
     'email-message == 1.0',
-    'great-justice-with-logging == 1.0.1',
+    'great-justice-with-logging == 1.0.2',
     'hotqueue',
     'flatland == dev',
     'pyyaml',
@@ -23,7 +23,7 @@ REQUIREMENTS = [
 ]
 DEPENDENCY_LINKS = [
     'git+git://github.com/paluh/email-message.git@1.0#egg=email-message-1.0',
-    'git+git://github.com/paluh/great-justice-with-logging.git@1.0.1#egg=great-justice-with-logging-1.0.1',
+    'git+git://github.com/paluh/great-justice-with-logging.git@1.0.2#egg=great-justice-with-logging-1.0.2',
 ]
 setup(
     name='mailmachine',
@@ -37,5 +37,5 @@ setup(
     packages=['mailmachine'],
     scripts=['scripts/mailmachined', 'scripts/mailmachinectl'],
     zip_safe=False,
-    version = '1.0.1',
+    version = '1.0.2',
 )
