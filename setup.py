@@ -23,7 +23,7 @@ REQUIREMENTS = [
 ]
 DEPENDENCY_LINKS = [
     'git+git://github.com/paluh/email-message.git@1.0#egg=email-message-1.0',
-    'git+git://github.com/paluh/great-justice-with-logging.git@1.0.2#egg=great-justice-with-logging-1.0.3',
+    'git+git://github.com/paluh/great-justice-with-logging.git@1.0.3#egg=great-justice-with-logging-1.0.3',
 ]
 setup(
     name='mailmachine',
