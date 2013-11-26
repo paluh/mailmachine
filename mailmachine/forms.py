@@ -22,7 +22,8 @@ class ConfigForm(Form):
     redis = Dict.of(RequiredString.named('host'),
                     Integer.named('port').using(validators=[Present()]),
                     String.named('password').using(optional=True),
-                    RequiredString.named('mail_queue'))
+                    RequiredString.named('mail_queue'),
+                    RequiredString.named('mail_errors_queue'))
     mailing = Dict.of(RequiredString.named('host'),
                       Integer.named('port').using(validators=[Present()]),
                       RequiredString.named('username'),

@@ -12,6 +12,7 @@ def load_config(path=None):
             'port': '6379',
             'password': '',
             'mail_queue': 'mailmachine',
+            'mail_errors_queue': 'mailmachine-errors',
         },
         'mailing': {
             'host': None,

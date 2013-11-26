@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 import argparse
 from email_message import get_connection
+import hashlib
+import hotqueue
 import logging
 import logging.handlers
 import os
+import simplejson
 import socket
 import sys
+import time
 
 from mailmachine.configuration import load_config
 from mailmachine import queue
@@ -22,6 +26,9 @@ if __name__ == '__main__':
     mail_queue = queue.MailQueue(rc['mail_queue'], host=rc['host'], port=rc['port'],
                                  password=rc.get('password'))
 
+    mail_errors_queue = hotqueue.HotQueue(rc['mail_errors_queue'],
+                                          host=rc['host'], port=rc['port'],
+                                          password=rc.get('password'))
     lc = config['logging']
     logger = logging.getLogger('mail-machine')
     logger.setLevel(getattr(logging, lc['level']))
@@ -45,17 +52,24 @@ if __name__ == '__main__':
         logger.addHandler(smtp_handler)
 
     def _send(msg):
-        connection = get_connection(mc['host'], mc['port'], username=mc['username'],
-                                    password=mc['password'], use_tls=mc['use_tls'])
-
-        # FIXME: we should check encoding headers and then encode...
-        connection.sendmail(msg[0], msg[1], msg[2] if isinstance(msg[2], str) else msg[2].encode('utf-8'))
         try:
-            connection.quit()
-        except socket.sslerror:
-            # This happens when calling quit() on a TLS connection
-            # sometimes.
-            connection.close()
+            connection = get_connection(mc['host'], mc['port'], username=mc['username'],
+                                        password=mc['password'], use_tls=mc['use_tls'])
+
+            # FIXME: we should check encoding headers and then encode...
+            connection.sendmail(msg[0], msg[1], msg[2] if isinstance(msg[2], str) else msg[2].encode('utf-8'))
+        except Exception, e:
+            payload = {'msg': msg, 'timestamp': time.time(), 'excepion': unicode(e)}
+            uid = hashlib.sha256(simplejson.dumps(payload)).hexdigest()
+            mail_errors_queue.put(dict(payload, uid=uid))
+            logger.exception(e)
+        else:
+            try:
+                connection.quit()
+            except socket.sslerror:
+                # This happens when calling quit() on a TLS connection
+                # sometimes.
+                connection.close()
     send_mails = mail_queue.worker(_send)
     try:
         send_mails()
