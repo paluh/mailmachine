@@ -1,12 +1,19 @@
 import hotqueue
 import simplejson
 
+class HotQueue(hotqueue.HotQueue):
+
+    def snapshot(self):
+        # list content without consuming queue
+        return [self.serializer.loads(c) for c in self._HotQueue__redis.lrange(self.key, 0, len(self)-1)]
+
+
 class MailQueue(object):
 
     def __init__(self, name, **kwargs):
         self.name = name
         kwargs.setdefault('serializer', simplejson)
-        self._queue = hotqueue.HotQueue(name, **kwargs)
+        self._queue = HotQueue(name, **kwargs)
 
     def put(self, from_email, recipients, msg):
         self._queue.put((from_email, recipients, msg))
@@ -16,11 +23,7 @@ class MailQueue(object):
 
     def snapshot(self):
         # list content without consuming queue
-        mails = []
-        q = self._queue
-        for mail in [q.serializer.loads(c) for c in q._HotQueue__redis.lrange(q.key, 0, len(q)-1)]:
-            mails.append(mail)
-        return mails
+        return self._queue.snapshot()
 
     def worker(self, *args, **kwargs):
         return self._queue.worker(*args, **kwargs)

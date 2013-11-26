@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import datetime
 import os
 import pprint
 import email
@@ -13,7 +14,7 @@ import sys
 
 from mailmachine import enqueue, send
 from mailmachine.configuration import load_config
-from mailmachine.queue import MailQueue
+from mailmachine.queue import MailQueue, HotQueue
 
 
 def _print(result, colors):
@@ -58,64 +59,97 @@ def do_send(args, config):
     mail['attachments'] = _build_attachments(mail.get('attachments', []))
     send(connection, **mail)
 
+
+separator = (Comment, '\n\n-------------------------------------------------------------------\n\n')
+
+def _format_message(message):
+    tokens = []
+    parser = email.Parser.Parser()
+    sender, recipients, msg = message
+    sender = email.utils.parseaddr(sender)
+    tokens.append((Keyword.Type, 'Sender: '))
+    tokens.append((Name.Variable, email.utils.formataddr([p[0] for s in sender for p in email.header.decode_header(s)])))
+    tokens.append((Whitespace, '\n'))
+    tokens.append((Keyword.Type, 'Recipients: '))
+    for r in recipients:
+        for i,p in enumerate(email.header.decode_header(r)):
+            if i > 0:
+                tokens.append((Punctuation, ', '))
+            tokens.append((Name.Variable, p[0]))
+    tokens.append((Whitespace, '\n'))
+    msg = parser.parsestr(msg.encode('utf-8'))
+    tokens.append((Keyword.Type, 'Subject: '))
+    tokens.append((Name.Variable, msg.get('Subject')))
+    tokens.append((Whitespace, '\n'))
+    body = None
+    attachments = []
+    for part in msg.walk():
+        if part.get('Content-Disposition', None):
+            ds = {}
+            for p in part.get('Content-Disposition').split(';'):
+                if '=' in p:
+                    n, v = p.split('=', 1)
+                    ds[n.strip().lower()] = v.strip()
+            filename = next((v for n,v in ds.items() if n.lower()=='filename'), None)
+            if filename:
+                attachments.append((filename, part.get_content_type()))
+        elif part.get_content_type() == 'text/plain':
+            body = '' if body is None else body
+            body += unicode(
+                part.get_payload(decode=True),
+                part.get_content_charset(),
+                'replace'
+            ).encode('utf8','replace')
+    tokens.append((Keyword.Type, 'Body: '))
+    tokens.append((Whitespace, '\n'))
+    tokens.append((Whitespace, '\n'))
+    tokens.append((String, body.decode('utf-8')))
+    tokens.append((Whitespace, '\n'))
+    tokens.append((Whitespace, '\n'))
+    if attachments:
+        tokens.append((Keyword.Type, 'Attachments: '))
+        for i,a in enumerate(attachments):
+            if i > 0:
+                tokens.append((Punctuation, ', '))
+            tokens.append((Name.Variable, a[0]))
+            tokens.append((Whitespace, ' '))
+            tokens.append((Name.Tag, a[1]))
+    return tokens
+
+def do_failures_snapshot(args, config):
+    c = config['redis']
+    mail_errors_queue = HotQueue(c['mail_errors_queue'], host=c['host'], port=c['port'],
+                                 password=c.get('password'))
+    tokens = []
+    for mail_error in mail_errors_queue.snapshot():
+        tokens.append(separator)
+        tokens.append((Keyword.Type, 'UID: '))
+        tokens.append((Name.Variable, mail_error['uid']))
+        tokens.append((Whitespace, '\n'))
+        tokens.append((Keyword.Type, 'Exception: '))
+        tokens.append((Name.Variable, mail_error['excepion']))
+        tokens.append((Whitespace, '\n'))
+        tokens.append((Keyword.Type, 'Sent: '))
+        tokens.append((Name.Variable, datetime.datetime
+                                              .fromtimestamp(mail_error['timestamp'])
+                                              .strftime('%Y-%m-%d %H:%m')))
+        tokens.append(separator)
+        tokens.extend(_format_message(mail_error['msg']))
+        tokens.append(separator)
+        tokens.append((Whitespace, '\n'))
+    formatter = TerminalFormatter()
+    formatter.format(tokens, sys.stdout)
+
+
 def do_snapshot(args, config):
     c = config['redis']
     mail_queue = MailQueue(c['mail_queue'], host=c['host'], port=c['port'],
                            password=c.get('password'))
-    parser = email.Parser.Parser()
     tokens = []
-    separator = (Comment, '\n\n-------------------------------------------------------------------\n\n')
-    for sender, recipients, msg in mail_queue.snapshot():
+    for message in mail_queue.snapshot():
         tokens.append(separator)
-        sender = email.utils.parseaddr(sender)
-        tokens.append((Keyword.Type, 'Sender: '))
-        tokens.append((Name.Variable, email.utils.formataddr([p[0] for s in sender for p in email.header.decode_header(s)])))
-        tokens.append((Whitespace, '\n'))
-        tokens.append((Keyword.Type, 'Recipients: '))
-        for r in recipients:
-            for i,p in enumerate(email.header.decode_header(r)):
-                if i > 0:
-                    tokens.append((Punctuation, ', '))
-                tokens.append((Name.Variable, p[0]))
-        tokens.append((Whitespace, '\n'))
-        msg = parser.parsestr(msg.encode('utf-8'))
-        tokens.append((Keyword.Type, 'Subject: '))
-        tokens.append((Name.Variable, msg.get('Subject')))
-        tokens.append((Whitespace, '\n'))
-        body = None
-        attachments = []
-        for part in msg.walk():
-            if part.get('Content-Disposition', None):
-                ds = {}
-                for p in part.get('Content-Disposition').split(';'):
-                    if '=' in p:
-                        n, v = p.split('=', 1)
-                        ds[n.strip().lower()] = v.strip()
-                filename = next((v for n,v in ds.items() if n.lower()=='filename'), None)
-                if filename:
-                    attachments.append((filename, part.get_content_type()))
-            elif part.get_content_type() == 'text/plain':
-                body = '' if body is None else body
-                body += unicode(
-                    part.get_payload(decode=True),
-                    part.get_content_charset(),
-                    'replace'
-                ).encode('utf8','replace')
-        tokens.append((Keyword.Type, 'Body: '))
-        tokens.append((Whitespace, '\n'))
-        tokens.append((Whitespace, '\n'))
-        tokens.append((String, body.decode('utf-8')))
-        tokens.append((Whitespace, '\n'))
-        tokens.append((Whitespace, '\n'))
-        if attachments:
-            tokens.append((Keyword.Type, 'Attachments: '))
-            for i,a in enumerate(attachments):
-                if i > 0:
-                    tokens.append((Punctuation, ', '))
-                tokens.append((Name.Variable, a[0]))
-                tokens.append((Whitespace, ' '))
-                tokens.append((Name.Tag, a[1]))
-    tokens.append(separator)
+        tokens.extend(_format_message(message))
+        tokens.append(separator)
     formatter = TerminalFormatter()
     formatter.format(tokens, sys.stdout)
 
@@ -151,14 +185,17 @@ if __name__ == '__main__':
                        help=('for example: ~/file.pdf application/pdf'))
 
     snapshot_parser = subparsers.add_parser('snapshot')
-    snapshot_parser.add_argument('--no-colors', help='Print result in colors',
-                             default=False, action='store_true')
+    failure_snapshot_parser = subparsers.add_parser('failures-snapshot')
+    for p in [snapshot_parser, failure_snapshot_parser]:
+        p.add_argument('--no-colors', help='Print result in colors',
+                       default=False, action='store_true')
     snapshot_parser.set_defaults(func=do_snapshot)
+    failure_snapshot_parser.set_defaults(func=do_failures_snapshot)
 
     cleanup_parser = subparsers.add_parser('cleanup')
     cleanup_parser.set_defaults(func=do_cleanup)
 
-    for p in [cleanup_parser, snapshot_parser, enqueue_parser, send_parser]:
+    for p in [cleanup_parser, snapshot_parser, enqueue_parser, send_parser, failure_snapshot_parser]:
         p.add_argument('-c', '--config', help='Specify configuration file',
                         default=default_config if os.path.exists(default_config) else None)
 

@@ -63,6 +63,7 @@ if __name__ == '__main__':
             uid = hashlib.sha256(simplejson.dumps(payload)).hexdigest()
             mail_errors_queue.put(dict(payload, uid=uid))
             logger.exception(e)
+            raise
         else:
             try:
                 connection.quit()
