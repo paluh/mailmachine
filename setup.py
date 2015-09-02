@@ -17,7 +17,7 @@ REQUIREMENTS = [
     'email-message == 1.0',
     'great-justice-with-logging == 1.0.3',
     'hotqueue',
-    'flatland == dev',
+    'flatland == 0.8',
     'pyyaml',
     'simplejson',
 ]
@@ -37,5 +37,5 @@ setup(
     packages=['mailmachine'],
     scripts=['scripts/mailmachined', 'scripts/mailmachinectl'],
     zip_safe=False,
-    version = '1.0.5',
+    version = '1.0.6',
 )
