@@ -20,7 +20,7 @@ from mailmachine.queue import MailQueue, HotQueue
 def _print(result, colors):
     json = simplejson.dumps(result, sort_keys=True, indent=4)
     if colors:
-        print highlight(json, pygments.lexers.get_lexer_by_name('json'), TerminalFormatter())
+        print highlight(json, pygments.lexers.get_lexer_by_name('json'), TerminalFormatter(encoding="utf-8"))
     else:
         pprint.pprint(json)
 
@@ -137,7 +137,7 @@ def do_failures_snapshot(args, config):
         tokens.extend(_format_message(mail_error['msg']))
         tokens.append(separator)
         tokens.append((Whitespace, '\n'))
-    formatter = TerminalFormatter()
+    formatter = TerminalFormatter(encoding="utf-8")
     formatter.format(tokens, sys.stdout)
 
 
@@ -150,7 +150,7 @@ def do_snapshot(args, config):
         tokens.append(separator)
         tokens.extend(_format_message(message))
         tokens.append(separator)
-    formatter = TerminalFormatter()
+    formatter = TerminalFormatter(encoding="utf-8")
     formatter.format(tokens, sys.stdout)
 
 def do_cleanup(args, config):
