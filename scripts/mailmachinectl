@@ -6,7 +6,7 @@ import pprint
 import email
 from email_message import get_connection
 from pygments import highlight
-from pygments.formatters import TerminalFormatter
+from pygments.formatters import HtmlFormatter, NullFormatter, TerminalFormatter
 import pygments.lexers
 from pygments.token import Keyword, Name, Punctuation, Comment, String, Whitespace
 import simplejson
@@ -137,7 +137,12 @@ def do_failures_snapshot(args, config):
         tokens.extend(_format_message(mail_error['msg']))
         tokens.append(separator)
         tokens.append((Whitespace, '\n'))
-    formatter = TerminalFormatter(encoding="utf-8")
+    if args.formatter == 'html':
+        formatter = HtmlFormatter(encoding="utf-8")
+    elif args.formatter == 'term':
+        formatter = TerminalFormatter(encoding="utf-8")
+    else:
+        formatter = NullFormatter(encoding="utf-8")
     formatter.format(tokens, sys.stdout)
 
 
@@ -150,7 +155,12 @@ def do_snapshot(args, config):
         tokens.append(separator)
         tokens.extend(_format_message(message))
         tokens.append(separator)
-    formatter = TerminalFormatter(encoding="utf-8")
+    if args.formatter == 'html':
+        formatter = HtmlFormatter(encoding="utf-8")
+    elif args.formatter == 'term':
+        formatter = TerminalFormatter(encoding="utf-8")
+    else:
+        formatter = NullFormatter(encoding="utf-8")
     formatter.format(tokens, sys.stdout)
 
 def do_cleanup(args, config):
@@ -198,6 +208,10 @@ if __name__ == '__main__':
     for p in [cleanup_parser, snapshot_parser, enqueue_parser, send_parser, failure_snapshot_parser]:
         p.add_argument('-c', '--config', help='Specify configuration file',
                         default=default_config if os.path.exists(default_config) else None)
+
+    for p in [snapshot_parser, failure_snapshot_parser]:
+        p.add_argument('-o', '--output-formatting', choices=['term', 'html'],
+                       required=False, dest='formatter')
 
     args = parser.parse_args()
     config = load_config(args.config)
