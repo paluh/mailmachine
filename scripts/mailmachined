@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 import argparse
-from email_message import get_connection
+from email_message import get_connection, PROTOCOL
 import hashlib
 import hotqueue
 import logging
 import logging.handlers
 import os
+from redis import ConnectionError
 import simplejson
 import socket
 import sys
 import time
 
 from mailmachine.configuration import load_config
+from mailmachine import mail
 from mailmachine import queue
 
 
@@ -43,23 +45,23 @@ if __name__ == '__main__':
     mc = config['mailing']
     if lc['email'] and lc['admins']:
         # probably we should use alternative mailing server here
-        subject = 'Log message from %s' % config['hostname']
-        from_addr = 'logging@%s' % config['hostname']
+        hostname = socket.getfqdn()
+        subject = 'Log message %s' % hostname
+        from_addr = 'logging@%s' % hostname
         smtp_handler = logging.handlers.SMTPHandler((mc['host'], mc['port']), from_addr,
                                                     lc['admins'], subject=subject,
                                                     credentials=(mc['username'], mc['password']),
-                                                    secure=() if mc['use_tls'] else None)
+                                                    secure=() if mc['protocol'] != PROTOCOL.PLAIN else None)
         logger.addHandler(smtp_handler)
 
-    def _send(msg):
+    def _send(message):
         try:
             connection = get_connection(mc['host'], mc['port'], username=mc['username'],
-                                        password=mc['password'], use_tls=mc['use_tls'])
+                                        password=mc['password'], protocol=mc['protocol'])
 
-            # FIXME: we should check encoding headers and then encode...
-            connection.sendmail(msg[0], msg[1], msg[2] if isinstance(msg[2], str) else msg[2].encode('utf-8'))
+            mail.send(connection, **message)
         except Exception, e:
-            payload = {'msg': msg, 'timestamp': time.time(), 'excepion': unicode(e)}
+            payload = {'msg': message, 'timestamp': time.time(), 'excepion': unicode(e)}
             uid = hashlib.sha256(simplejson.dumps(payload)).hexdigest()
             mail_errors_queue.put(dict(payload, uid=uid))
             logger.exception(e)
@@ -71,8 +73,18 @@ if __name__ == '__main__':
                 # This happens when calling quit() on a TLS connection
                 # sometimes.
                 connection.close()
+
     send_mails = mail_queue.worker(_send)
-    try:
-        send_mails()
-    except Exception, e:
-        logger.exception(e)
+    if rc.get('reconnect'):
+        while True:
+            try:
+                send_mails()
+            except ConnectionError, e:
+                logger.exception(e)
+            else:
+                break
+    else:
+        try:
+            send_mails()
+        except ConnectionError, e:
+            logger.exception(e)

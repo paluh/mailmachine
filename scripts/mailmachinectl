@@ -55,7 +55,7 @@ def do_send(args, config):
     mc = config['mailing']
     mail = _get_mail_params(args)
     connection = get_connection(mc['host'], mc['port'], username=mc['username'],
-                                password=mc['password'], use_tls=mc['use_tls'])
+                                password=mc['password'], protocol=mc['protocol'])
     mail['attachments'] = _build_attachments(mail.get('attachments', []))
     send(connection, **mail)
 

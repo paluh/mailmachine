@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from email_message import PROTOCOL
 import yaml
 
 from .forms import collect_errors, ConfigForm
@@ -6,11 +7,11 @@ from .forms import collect_errors, ConfigForm
 
 def load_config(path=None):
     defaults = {
-        'hostname': 'localhost',
         'redis': {
             'host': 'localhost',
             'port': '6379',
             'password': '',
+            'reconnect': True,
             'mail_queue': 'mailmachine',
             'mail_errors_queue': 'mailmachine-errors',
         },
@@ -19,7 +20,7 @@ def load_config(path=None):
             'port': None,
             'username': None,
             'password': None,
-            'use_tls': True,
+            'protocol': PROTOCOL.TLS,
         },
         'logging': {
             'level': 'DEBUG',

@@ -4,23 +4,19 @@ import email_message
 import time
 
 def enqueue(mail_queue, subject, body, from_email, recipients, alternatives=None,
-            attachments=None, sent=None):
-    messages = _build_messages(subject, body, from_email, recipients, alternatives, attachments, sent)
+            attachments=None):
+    mail_queue.put(subject=subject, body=body, from_email=from_email,
+                   recipients=recipients, alternatives=alternatives,
+                   attachments=attachments)
+
+def send(connection, subject, body, from_email, recipients, alternatives=None, attachments=None):
+    messages = _build_messages(subject, body, from_email, recipients, alternatives, attachments)
     for from_email, recipients, msg in messages:
-        mail_queue.put(from_email, recipients, msg)
-
-def send(connection, subject, body, from_email, recipients, alternatives=None,
-         attachments=None, sent=None):
-
-    messages = _build_messages(subject, body, from_email, recipients, alternatives, attachments, sent)
-
-    for from_email, recipients, msg in messages:
-        # FIXME: we should check encoding headers and then encode...
         connection.sendmail(from_email, recipients, msg.encode('utf-8') if isinstance(msg, unicode) else msg)
 
-def _build_messages(subject, body, from_email, recipients, alternatives=None, attachments=None, sent=None):
+def _build_messages(subject, body, from_email, recipients, alternatives=None, attachments=None):
     headers = {
-        'Date': formatdate(sent or int(time.time()))
+        'Date': formatdate(int(time.time()))
     }
     messages = []
     attachments = attachments or []

@@ -1,8 +1,8 @@
 hostname: 'worker.example.com'
 mailing:
   host: 'smtp.example.com'
-  port: '587'
-  use_tls: True
+  port: '465'
+  protocol: 'SSL'
   username: 'spammer@example.com'
   password: 'p4ssw0rd'
 logging:
@@ -13,3 +13,4 @@ logging:
   level: 'DEBUG'
 redis:
     'mail_queue': 'mailmachine'
+    'reconnect': true
