@@ -151,17 +151,20 @@ def do_snapshot(args, config):
     mail_queue = MailQueue(c['mail_queue'], host=c['host'], port=c['port'],
                            password=c.get('password'))
     tokens = []
-    for message in mail_queue.snapshot():
-        tokens.append(separator)
-        tokens.extend(_format_message(message))
-        tokens.append(separator)
-    if args.formatter == 'html':
-        formatter = HtmlFormatter(encoding="utf-8")
-    elif args.formatter == 'term':
-        formatter = TerminalFormatter(encoding="utf-8")
-    else:
-        formatter = NullFormatter(encoding="utf-8")
-    formatter.format(tokens, sys.stdout)
+    for m in mail_queue.snapshot():
+       print m['subject']
+       print m['body']
+    # for message in mail_queue.snapshot():
+    #     tokens.append(separator)
+    #     tokens.extend(_format_message(message))
+    #     tokens.append(separator)
+    # if args.formatter == 'html':
+    #     formatter = HtmlFormatter(encoding="utf-8")
+    # elif args.formatter == 'term':
+    #     formatter = TerminalFormatter(encoding="utf-8")
+    # else:
+    #     formatter = NullFormatter(encoding="utf-8")
+    # formatter.format(tokens, sys.stdout)
 
 def do_cleanup(args, config):
     c = config['redis']
