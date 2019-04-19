@@ -5,4 +5,4 @@ from .queue import MailQueue
 __all__ = ['enqueue', 'EnqueueMailLoggingHandler', 'ImmediateMailLoggingHandler',
            'MailQueue', 'send']
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
