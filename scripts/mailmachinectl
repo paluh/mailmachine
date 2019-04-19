@@ -155,6 +155,8 @@ def do_resend_failures(args, config):
     c = config['redis']
     mail_errors_queue = HotQueue(c['mail_errors_queue'], host=c['host'], port=c['port'],
                                  password=c.get('password'))
+    mail_queue = MailQueue(c['mail_queue'], host=c['host'], port=c['port'],
+                           password=c.get('password'))
     mail_errors = []
     while True:
         m = mail_errors_queue.get(block=False)
@@ -167,7 +169,6 @@ def do_resend_failures(args, config):
         if since is not None and sent < since:
             continue
         mail = mail_error['msg']
-        mail['recipients'] = ['paluho@gmail.com']
         enqueue(mail_queue, **mail)
 
 def do_cleanup(args, config):
