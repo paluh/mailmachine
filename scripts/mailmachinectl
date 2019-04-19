@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import argparse
+import base64
+import cgi
 import datetime
 import os
 import pprint
@@ -146,6 +148,73 @@ def do_failures_snapshot(args, config):
     formatter.format(tokens, sys.stdout)
 
 
+def do_resend_failures(args, config):
+    since = args.since
+    if args.since is not None:
+        since = datetime.datetime.strptime(args.since, '%Y-%m-%d')
+
+    c = config['redis']
+    mail_errors_queue = HotQueue(c['mail_errors_queue'], host=c['host'], port=c['port'],
+                                 password=c.get('password'))
+    mail_errors = []
+    while True:
+        m = mail_errors_queue.get(block=False)
+        if m is None:
+            break
+        mail_errors.append(m)
+
+    for mail_error in mail_errors:
+        sent = datetime.datetime.fromtimestamp(mail_error['timestamp'])
+        if since is not None and sent < since:
+            continue
+        parser = email.Parser.Parser()
+        sender, recipients, msg = mail_error['msg']
+
+        msg = parser.parsestr(msg.encode('utf-8'))
+
+        sender = email.utils.parseaddr(sender)
+        sender =  [p[0] for s in sender for p in email.header.decode_header(s)][1]
+
+        recipients = [email.utils.parseaddr(r)[1] for r in recipients]
+
+        mime = msg.get_content_type()
+        payload = msg.get_payload()
+        if mime == 'text/plain':
+            body = payload
+            alternatives = []
+            attachments = []
+        elif mime == 'multipart/alternative':
+            body = payload[0].get_payload()
+            alternatives = [(a.get_payload(), a.get_content_type()) for a in payload[1:]]
+            attachments = []
+        elif mime == 'multipart/mixed':
+            b_payload = payload[0]
+            b_mime = b_payload.get_content_type()
+            if b_mime == 'text/plain':
+                body = b_payload
+                alternatives = []
+            elif b_mime == 'multipart/alternative':
+                b_payload = b_payload.get_payload()
+                body = b_payload[0].get_payload()
+                alternatives = [(a.get_payload(), a.get_content_type()) for a in b_payload[1:]]
+            else:
+                raise ValueError("Bad email structure")
+            attachments = [(cgi.parse_header(a.get('Content-Disposition'))[1]['filename'], base64.b64decode(a.get_payload()), a.get_content_type()) for a in payload[1:]]
+
+        subject = msg.get('subject')
+
+        mail = {
+            'subject': subject,
+            'body': body,
+            'recipients': recipients,
+            'from_email': sender,
+            'attachments': attachments,
+        }
+        mail_queue = MailQueue(c['mail_queue'], host=c['host'], port=c['port'],
+                               password=c.get('password'))
+        enqueue(mail_queue, **mail)
+
+
 def do_snapshot(args, config):
     c = config['redis']
     mail_queue = MailQueue(c['mail_queue'], host=c['host'], port=c['port'],
@@ -165,6 +234,20 @@ def do_snapshot(args, config):
     # else:
     #     formatter = NullFormatter(encoding="utf-8")
     # formatter.format(tokens, sys.stdout)
+# =======
+#     for message in mail_queue.snapshot():
+#         tokens.append(separator)
+#         print message
+#         tokens.extend(_format_message(message))
+#         tokens.append(separator)
+#     if args.formatter == 'html':
+#         formatter = htmlformatter(encoding="utf-8")
+#     elif args.formatter == 'term':
+#         formatter = terminalformatter(encoding="utf-8")
+#     else:
+#         formatter = NullFormatter(encoding="utf-8")
+#     formatter.format(tokens, sys.stdout)
+# >>>>>>> Stashed changes
 
 def do_cleanup(args, config):
     c = config['redis']
@@ -199,16 +282,20 @@ if __name__ == '__main__':
 
     snapshot_parser = subparsers.add_parser('snapshot')
     failure_snapshot_parser = subparsers.add_parser('failures-snapshot')
+    snapshot_parser.set_defaults(func=do_snapshot)
+    failure_snapshot_parser.set_defaults(func=do_failures_snapshot)
     for p in [snapshot_parser, failure_snapshot_parser]:
         p.add_argument('--no-colors', help='Print result in colors',
                        default=False, action='store_true')
-    snapshot_parser.set_defaults(func=do_snapshot)
-    failure_snapshot_parser.set_defaults(func=do_failures_snapshot)
+
+    resend_parser = subparsers.add_parser('resend-failures')
+    resend_parser.add_argument('--since', help='Resend only newer message then date "yyyy-mm-dd"', default=None)
+    resend_parser.set_defaults(func=do_resend_failures)
 
     cleanup_parser = subparsers.add_parser('cleanup')
     cleanup_parser.set_defaults(func=do_cleanup)
 
-    for p in [cleanup_parser, snapshot_parser, enqueue_parser, send_parser, failure_snapshot_parser]:
+    for p in [cleanup_parser, snapshot_parser, enqueue_parser, send_parser, failure_snapshot_parser, resend_parser]:
         p.add_argument('-c', '--config', help='Specify configuration file',
                         default=default_config if os.path.exists(default_config) else None)
 

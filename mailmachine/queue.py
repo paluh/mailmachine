@@ -19,14 +19,16 @@ class MailQueue(object):
     def put(self, subject, body, from_email, recipients,
             alternatives=None, attachments=None, sent=None):
 
-        attachments = map(lambda a: (a[0], base64.b64encode(a[1]), a[2]), attachments or [])
+        attachments = map(lambda a: ({'file_name': a[0], 'content': base64.b64encode(a[1]), 'mime': a[2]}),
+                          attachments or [])
         self._queue.put({'subject': subject, 'body': body, 'from_email': from_email,
                          'recipients': recipients, 'alternatives': alternatives,
                          'attachments': attachments})
 
     def get(self, block=False, timeout=None):
         message = self._queue.get(block, timeout)
-        message['attachments'] = map(lambda a: (a[0], base64.b64decode(a[1]), a[2]), message['attachments'])
+        message['attachments'] = map(lambda a: (a['file_name'],
+                                     base64.b64decode(a['content']), a['mime']), message['attachments'])
         return message
 
     def snapshot(self):
