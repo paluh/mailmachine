@@ -176,7 +176,14 @@ def do_cleanup(args, config):
     mail_queue = MailQueue(c['mail_queue'], host=c['host'], port=c['port'],
                            password=c.get('password'))
     for m in mail_queue._queue.consume(block=False):
-        print 'Dropping:', m[0]
+        print 'Dropping:', m['subject']
+
+def do_cleanup_failures(args, config):
+    c = config['redis']
+    mail_errors_queue = HotQueue(c['mail_errors_queue'], host=c['host'], port=c['port'],
+                                 password=c.get('password'))
+    for m in mail_errors_queue.consume(block=False):
+        print 'Dropping:', m['msg']['subject']
 
 
 if __name__ == '__main__':
@@ -217,7 +224,11 @@ if __name__ == '__main__':
     cleanup_parser = subparsers.add_parser('cleanup')
     cleanup_parser.set_defaults(func=do_cleanup)
 
-    for p in [cleanup_parser, snapshot_parser, enqueue_parser, send_parser, failure_snapshot_parser, resend_parser]:
+    cleanup_failures_parser = subparsers.add_parser('cleanup-failures')
+    cleanup_failures_parser.set_defaults(func=do_cleanup_failures)
+
+    for p in [cleanup_parser, cleanup_failures_parser, snapshot_parser, enqueue_parser,
+              send_parser, failure_snapshot_parser, resend_parser]:
         p.add_argument('-c', '--config', help='Specify configuration file',
                         default=default_config if os.path.exists(default_config) else None)
 
