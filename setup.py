@@ -14,17 +14,13 @@ CLASSIFIERS = [
 ]
 
 REQUIREMENTS = [
-    'email-message == 1.1.1',
-    'great-justice-with-logging == 1.0.3',
     'hotqueue',
     'flatland == 0.8',
     'pyyaml',
     'pygments',
     'simplejson',
-]
-DEPENDENCY_LINKS = [
-    'git+git://github.com/paluh/email-message.git@1.1.1#egg=email-message-1.1.1',
-    'git+git://github.com/paluh/great-justice-with-logging.git@1.0.3#egg=great-justice-with-logging-1.0.3',
+    'email-message @ git+git://github.com/paluh/email-message.git@1.1.1#egg=email-message-1.1.1',
+    'great-justice-with-logging @ git+git://github.com/paluh/great-justice-with-logging.git@1.0.3#egg=great-justice-with-logging-1.0.3',
 ]
 setup(
     name='mailmachine',
@@ -32,7 +28,6 @@ setup(
     author_email='paluho@gmail.com',
     classifiers=CLASSIFIERS,
     description='Simple, single threaded mailing worker.',
-    dependency_links=DEPENDENCY_LINKS,
     install_requires=REQUIREMENTS,
     url='https://github.com/paluh/mailmachine',
     packages=['mailmachine'],
