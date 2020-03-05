@@ -42,6 +42,7 @@ def _get_mail_params(args):
         'from_email': args.from_email,
         'recipients': args.recipients,
         'attachments': args.attachments,
+        'alternatives': args.alternatives,
     }
 
 def do_enqueue(args, config):
@@ -208,6 +209,9 @@ if __name__ == '__main__':
         p.add_argument('-a', '--attachment', action='append', metavar=('PATH', 'MIME_TYPE'),
                        dest='attachments', nargs=2, default=[],
                        help=('for example: ~/file.pdf application/pdf'))
+        p.add_argument('-l', '--alternative', action='append', metavar=('CONTENT', 'MIME_TYPE'),
+                       dest='alternatives', nargs=2, default=[],
+                       help=('for example: "<h1>body</h1>" "text/html"'))
 
     snapshot_parser = subparsers.add_parser('snapshot')
     failure_snapshot_parser = subparsers.add_parser('failures-snapshot')
