@@ -19,7 +19,7 @@ REQUIREMENTS = [
     'pyyaml',
     'pygments',
     'simplejson',
-    'email-message @ git+git://github.com/paluh/email-message.git@1.1.1#egg=email-message-1.1.1',
+    'email-message @ git+git://github.com/paluh/email-message.git@1.1.1#egg=email-message-1.1.2',
     'great-justice-with-logging @ git+git://github.com/paluh/great-justice-with-logging.git@1.0.3#egg=great-justice-with-logging-1.0.3',
 ]
 setup(
@@ -33,5 +33,5 @@ setup(
     packages=['mailmachine'],
     scripts=['scripts/mailmachined', 'scripts/mailmachinectl'],
     zip_safe=False,
-    version = '1.2.5',
+    version = '1.2.6',
 )
