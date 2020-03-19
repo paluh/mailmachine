@@ -21,7 +21,11 @@ class MailQueue(object):
 
         attachments = map(lambda a: ({'file_name': a[0], 'content': base64.b64encode(a[1]), 'mime': a[2]}),
                           attachments or [])
-        alternatives = map(lambda a: (base64.b64encode(a[0]), a[1]), alternatives or [])
+
+        alternatives = map(
+            lambda a: (base64.b64encode(a[0].encode('utf-8') if isinstance(a[0], unicode) else a[0]), a[1]),
+            alternatives or []
+        )
         self._queue.put({'subject': subject, 'body': body, 'from_email': from_email,
                          'recipients': recipients, 'alternatives': alternatives,
                          'attachments': attachments})
